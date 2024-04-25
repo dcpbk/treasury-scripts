@@ -10,11 +10,12 @@ $ini_array = parse_ini_file('stripe-reports.ini');
 $stripe = new \Stripe\StripeClient($ini_array['stripe_api_key']);
 
 // Create a report run
+date_default_timezone_set('UTC'); // set timezone to UTC
 $report_request = $stripe->reporting->reportRuns->create([
     'report_type' => 'balance_change_from_activity.itemized.2',
     'parameters' => [
-        'interval_start' => strtotime('first day of January ' . date('Y')),
-        'interval_end' => strtotime('today'),
+        'interval_start' => strtotime('first day of January ' . date('Y') . ' 00:00:00'),
+        'interval_end' => strtotime('today 00:00:00'),
         'columns' => ['balance_transaction_id', 'created_utc', 'reporting_category', 'gross', 'fee', 'net', 'currency', 'description', 'customer_id', 'customer_email', 'customer_name', 'customer_description'],
     ],
 ]);
