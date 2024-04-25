@@ -11,11 +11,11 @@ $stripe = new \Stripe\StripeClient($ini_array['stripe_api_key']);
 
 // Create a report run
 $report_request = $stripe->reporting->reportRuns->create([
-    'report_type' => 'balance_change_from_activity.itemized.3',
+    'report_type' => 'balance_change_from_activity.itemized.2',
     'parameters' => [
         'interval_start' => strtotime('first day of January ' . date('Y')),
         'interval_end' => strtotime('today'),
-        'columns' => ['customer_id', 'customer_email', 'customer_name', 'customer_description'],
+        'columns' => ['balance_transaction_id', 'created_utc', 'reporting_category', 'gross', 'fee', 'net', 'currency', 'description', 'customer_id', 'customer_email', 'customer_name', 'customer_description'],
     ],
 ]);
 
@@ -44,10 +44,20 @@ if ($report_run['status'] != 'succeeded') {
     exit;
 }
 
+// make output directory if not exists
+if (!is_dir('output')) {
+    mkdir('output', 0777, true);
+}
+
+//make stripe directory if not exists
+if (!is_dir('output/stripe')) {
+    mkdir('output/stripe', 0777, true);
+}
+
 // Download the report with curl like curl {report_url} -u {stripe_api_key}:
 echo "Downloading report...\n";
 $report_url = $report_run['result']['url'];
-$file_path = './' . date('Y') . '_report.csv'; // specify the file name and path where you want to save the file
+$file_path = 'output/stripe/' . date('Y') . '_report.csv'; // specify the file name and path where you want to save the file
 
 // Check if the file already exists and delete it
 if (file_exists($file_path)) {

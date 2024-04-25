@@ -2,5 +2,4 @@
 *.ini
 
 # Hide output files
-*.csv
-*.log
+/output/
