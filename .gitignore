@@ -1,0 +1,6 @@
+# Hide all php config files
+*.ini
+
+# Hide output files
+*.csv
+*.log
