@@ -29,8 +29,8 @@ echo "Report run ID: " . $report_run_id . "\n";
 // Wait for the report run to complete
 sleep(10);
 
-// Allow up to 20 minutes for the report to complete
-for ($i = 1; $i <= 60; $i++) {
+// Allow up to 20 hours for the report to complete
+for ($i = 1; $i <= 3600; $i++) {
     $report_run = $stripe->reporting->reportRuns->retrieve($report_run_id);
     echo "Report run status: " . $report_run['status'] . "\n";
     if ($report_run['status'] != 'succeeded') {
