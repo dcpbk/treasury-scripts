@@ -7,9 +7,13 @@ const BAL_SHEET_LABEL = "emails-test";
  */
 function saveLabelledEmailsToSheets() {
   // Part 1: Balance Log
+  // Get all unread emails with the label $BAL_EMAIL_LABEL
+  const bal_emails = getLabelledEmails(`is:unread label:${BAL_EMAIL_LABEL}`);
   try {
-    processBalanceLogEmails();
+    processBalanceLogEmails(bal_emails);
   } catch (e) {
+    // unread emails if we failed to add to the sheet for some reason
+    bal_emails.forEach((m) => m.markUnread());
     // Log the error and continue (we don't want to stop the other processes)
     Logger.log(e);
   }
@@ -18,11 +22,11 @@ function saveLabelledEmailsToSheets() {
 }
 
 /**
- * Processes balance log emails and updates the balance log sheet.
+ * Processes balance log emails and updates the balance log sheet.'
+ * @param {Array<GmailMessage>} messages - Array of Gmail messages
  * @returns {void}
  */
-function processBalanceLogEmails() {
-  const messages = getLabelledEmails(`is:unread label:${BAL_EMAIL_LABEL}`);
+function processBalanceLogEmails(messages = []) {
   if (messages.length <= 0) return; // return if there's no emails in that label
 
   // get the target sheet
@@ -33,7 +37,8 @@ function processBalanceLogEmails() {
   const emailID = sheet.getRange(2, 1, data_height, 1).getValues().flat();
 
   // regex to match the date and balance
-  const regex = /as of (\d{1,2}\/\d{1,2}\/\d{4} \d{1,2}:\d{2}:\d{2} [AP]M) is \$([0-9,.]+),/;
+  const regex =
+    /as of (\d{1,2}\/\d{1,2}\/\d{4} \d{1,2}:\d{2}:\d{2} [AP]M) is \$([0-9,.]+),/;
 
   const newData = [];
   messages.forEach((m) => {
@@ -42,9 +47,11 @@ function processBalanceLogEmails() {
       const message_body = m.getPlainBody();
 
       // match the date and balance from the email body
-      const match = regex.exec(message_body.replaceAll("\r","").replaceAll("\n"," "));
+      const match = regex.exec(
+        message_body.replaceAll("\r", "").replaceAll("\n", " ")
+      );
       const message_date = match[1];
-      const message_balance = match[2].replaceAll(",",""); 
+      const message_balance = match[2].replaceAll(",", "");
 
       newData.push([
         m.getId(),
@@ -61,16 +68,9 @@ function processBalanceLogEmails() {
   // if new data is empty return
   if (newData.length <= 0) return;
 
-  //
-  try {
-    sheet
-      .getRange(data_height + 1, 1, newData.length, newData[0].length)
-      .setValues(newData);
-  } catch (e) {
-    // unread emails if we failed to add to the sheet for some reason
-    messages.forEach((m) => m.markUnread());
-    throw e;
-  }
+  sheet
+    .getRange(data_height + 1, 1, newData.length, newData[0].length)
+    .setValues(newData);
 }
 
 /**
