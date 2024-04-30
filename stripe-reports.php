@@ -24,7 +24,7 @@ $report_request = $stripe->reporting->reportRuns->create([
     'parameters' => [
         'interval_start' => strtotime('-30 days 00:00:00'),
         'interval_end' => strtotime('today 00:00:00'),
-        'columns' => ['balance_transaction_id', 'created_utc', 'reporting_category', 'gross', 'fee', 'net', 'currency', 'description', 'customer_id', 'customer_email', 'customer_name', 'customer_description'],
+        'columns' => ['balance_transaction_id', 'created_utc', 'automatic_payout_effective_at', 'reporting_category', 'gross', 'fee', 'net', 'currency', 'description', 'customer_id', 'customer_email', 'customer_name', 'customer_description'],
     ],
 ]);
 
