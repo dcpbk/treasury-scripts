@@ -9,14 +9,6 @@ $ini_array = parse_ini_file('stripe-reports.ini');
 // Set the API key
 $stripe = new \Stripe\StripeClient($ini_array['stripe_api_key']);
 
-// List processing reports
-$reports = $stripe->reporting->reportRuns->all(['limit' => 50]);
-echo "Available reports:\n";
-foreach ($reports as $report) {
-    echo $report['id'] . ": Created at " . date('Y-m-d H:i:s', $report['created']) . " and completed at " . date('Y-m-d H:i:s', $report['succeeded_at']) . "\n";
-}
-exit;
-
 // Create a report run
 date_default_timezone_set('UTC'); // set timezone to UTC
 $report_request = $stripe->reporting->reportRuns->create([
