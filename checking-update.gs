@@ -1,5 +1,8 @@
-const BAL_EMAIL_LABEL = "balance-log";
-const BAL_SHEET_LABEL = "emails-test";
+const BAL_EMAIL_LABEL = "ssb-balance-log";
+const BAL_SHEET_LABEL = "checking-balance-log";
+
+const TRN_EMAIL_LABEL = "ssb-transaction-log";
+const TRN_SHEET_LABEL = "checking-transaction-log";
 
 /**
  * Saves the target email label to the bound Spreadsheet.
@@ -15,10 +18,20 @@ function saveLabelledEmailsToSheets() {
     // unread emails if we failed to add to the sheet for some reason
     bal_emails.forEach((m) => m.markUnread());
     // Log the error and continue (we don't want to stop the other processes)
-    Logger.log(e);
+    console.log(e);
   }
 
   // Part 2: Transaction Log
+  // Get all unread emails with the label $TRN_EMAIL_LABEL
+  const trn_emails = getLabelledEmails(`is:unread label:${TRN_EMAIL_LABEL}`);
+  try {
+    processTransactionLogEmails(trn_emails);
+  } catch (e) {
+    // unread emails if we failed to add to the sheet for some reason
+    trn_emails.forEach((m) => m.markUnread());
+    // Log the error and continue (we don't want to stop the other processes)
+    console.log(e);
+  }
 }
 
 /**
@@ -59,6 +72,66 @@ function processBalanceLogEmails(messages = []) {
         message_date,
         m.getSubject(),
         message_balance,
+      ]);
+    }
+    // read emails so we don't load it on the next run
+    m.markRead();
+  });
+
+  // if new data is empty return
+  if (newData.length <= 0) return;
+
+  sheet
+    .getRange(data_height + 1, 1, newData.length, newData[0].length)
+    .setValues(newData);
+}
+
+/**
+ * Processes transaction log emails and updates the balance log sheet.'
+ * @param {Array<GmailMessage>} messages - Array of Gmail messages
+ * @returns {void}
+ */
+function processTransactionLogEmails(messages = []) {
+  if (messages.length <= 0) return; // return if there's no emails in that label
+
+  // get the target sheet
+  const sheet =
+    SpreadsheetApp.getActiveSpreadsheet().getSheetByName(TRN_SHEET_LABEL);
+  const data_height = sheet.getDataRange().getHeight();
+  // get ids for the messages to filter new ones
+  const emailID = sheet.getRange(2, 7, data_height, 1).getValues().flat();
+
+  // regex to match the date and balance
+  const regex =
+    / A (.+?) (credit|debit) of \$([0-9,.]+) was .+ on (\d{1,2}\/\d{1,2}\/\d{4} \d{1,2}:\d{2}:\d{2} [AP]M),/;
+
+  const newData = [];
+  messages.forEach((m) => {
+    // add new emails to the array
+    if (!emailID.includes(m.getId())) {
+      const message_body = m.getPlainBody();
+
+      // match the date and balance from the email body
+      const match = regex.exec(
+        message_body.replaceAll("\r", "").replaceAll("\n", " ")
+      );
+      const description = match[1];
+      const type = match[2];
+      const amount = match[3].replaceAll(",", "");
+      const post_date = match[4];
+
+      newData.push([
+        "055001096",
+        "1670000000",
+        "Checking",
+        "BUSINESS INTEREST CHECKING",
+        post_date,
+        "",
+        m.getId(),
+        amount,
+        description,
+        type,
+        "",
       ]);
     }
     // read emails so we don't load it on the next run
