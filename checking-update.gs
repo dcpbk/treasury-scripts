@@ -120,6 +120,9 @@ function processTransactionLogEmails(messages = []) {
       const amount = match[3].replaceAll(",", "");
       const post_date = match[4];
 
+      // define a variable sign which is 1 for credit and -1 for debit
+      const sign = type === "credit" ? 1 : -1;
+
       newData.push([
         "055001096",
         "1670000000",
@@ -128,7 +131,7 @@ function processTransactionLogEmails(messages = []) {
         post_date,
         "",
         m.getId(),
-        amount,
+        sign * amount,
         description,
         type,
         "",
