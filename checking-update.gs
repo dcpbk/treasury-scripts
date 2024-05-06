@@ -51,7 +51,7 @@ function processBalanceLogEmails(messages = []) {
 
   // regex to match the date and balance
   const regex =
-    /as of (\d{1,2}\/\d{1,2}\/\d{4} \d{1,2}:\d{2}:\d{2} [AP]M) is \$([0-9,.]+),/;
+    /(\d{4}) as of (\d{1,2}\/\d{1,2}\/\d{4} \d{1,2}:\d{2}:\d{2} [AP]M) is \$([0-9,.]+),/;
 
   const newData = [];
   messages.forEach((m) => {
@@ -63,13 +63,15 @@ function processBalanceLogEmails(messages = []) {
       const match = regex.exec(
         message_body.replaceAll("\r", "").replaceAll("\n", " ")
       );
-      const message_date = match[1];
-      const message_balance = match[2].replaceAll(",", "");
+      const message_account = match[1];
+      const message_date = match[2];
+      const message_balance = match[3].replaceAll(",", "");
 
       newData.push([
         m.getId(),
         m.getDate(),
         message_date,
+        message_account,
         m.getSubject(),
         message_balance,
       ]);
@@ -160,5 +162,5 @@ function getLabelledEmails(query = "") {
   // get all the messages for the current batch of threads
   const messages = GmailApp.getMessagesForThreads(labelThreads);
   // Flatten to a single array (get messages returns an array of arrays)
-  return messages.flat();
+  return messages.flat().reverse();
 }
