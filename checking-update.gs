@@ -105,7 +105,7 @@ function processTransactionLogEmails(messages = []) {
 
   // regex to match the date and balance
   const regex =
-    / A (.+?) (credit|debit) of \$([0-9,.]+) was \w+ \w+ your account \*(\d{4}) on (\d{1,2}\/\d{1,2}\/\d{4} \d{1,2}:\d{2}:\d{2} [AP]M),/;
+    / (Credit|Debit) .+ ending in (\d{4})\. (\d+) item\(s\) .+ of \$([0-9,.]+) /;
 
   const newData = [];
   messages.forEach((m) => {
@@ -117,11 +117,11 @@ function processTransactionLogEmails(messages = []) {
       const match = regex.exec(
         message_body.replaceAll("\r", "").replaceAll("\n", " ")
       );
-      const description = match[1];
-      const type = match[2];
-      const amount = match[3].replaceAll(",", "");
-      const post_account = match[4];
-      const post_date = match[5];
+      const description = match[3].toString() + " item(s)" ;
+      const type = match[1].toLowerCase();
+      const amount = match[4].replaceAll(",", "");
+      const post_account = match[2];
+      const post_date = m.getDate();
 
       // define a variable sign which is 1 for credit and -1 for debit
       const sign = type === "credit" ? 1 : -1;
