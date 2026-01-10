@@ -69,7 +69,12 @@ function processBalanceLogEmails(messages = []) {
 
       newData.push([
         m.getId(),
-        m.getDate(),
+        (() => {
+          const d = new Date(m.getDate());
+          d.setDate(d.getDate() - 1);
+          d.setHours(0, 0, 0, 0);
+          return d;
+        })(),
         message_date,
         message_account,
         m.getSubject(),
